@@ -119,12 +119,14 @@ trait Operations<
 
         let nblocks = insize / BLOCKSIZE;
 
+        // Process available blocks.
         self._transform(&mut ctx.state, input);
 
+        // Copy residual bytes to buffer.
         if insize % BLOCKSIZE != 0 {
             ctx.rem_pos = insize - (nblocks * BLOCKSIZE);
-            ctx.buffer
-                .copy_from_slice(&input[nblocks * BLOCKSIZE..ctx.rem_pos]);
+            ctx.buffer[..ctx.rem_pos]
+                .copy_from_slice(&input[nblocks * BLOCKSIZE..]);
         }
 
         return Ok(());
