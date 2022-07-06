@@ -112,7 +112,7 @@ trait Operations<
 
         // Not enough input for full blocks. Copy to buffer.
         } else if (ctx.rem_pos + insize) < BLOCKSIZE {
-            ctx.buffer[ctx.rem_pos..insize].copy_from_slice(&input);
+            ctx.buffer[ctx.rem_pos..ctx.rem_pos + insize].copy_from_slice(&input);
             ctx.rem_pos += insize;
             return Ok(());
         }

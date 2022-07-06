@@ -11,6 +11,7 @@ num = "0.4"
 [dev-dependencies]
 regex = "1.5"
 hex = "0.4"
+rand = "0.8.5"
 
 [dependencies.num-traits]
 version = "0.2"

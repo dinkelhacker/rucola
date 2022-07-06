@@ -1,6 +1,5 @@
 use crate::hash::Operations;
 use crate::hash::HashDataCtx;
-use crate::utils::Binutils;
 use crate::utils::UsizeCast;
 
 pub const SHA1_DIGEST_SIZE: usize = 20;
