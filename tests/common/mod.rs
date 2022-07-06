@@ -48,7 +48,7 @@ pub fn parse_hash_vectors(files: &[&'static str]) -> Vec<(Vec<u8>, Vec<u8>)>{
     return vec;
 }
 
-fn streaming_api_test<const DS: usize>(tv: Vec<(Vec<u8>, Vec<u8>)>, s: &mut SHA) {
+pub fn streaming_api_test<const DS: usize>(tv: Vec<(Vec<u8>, Vec<u8>)>, s: &mut SHA) {
     let mut rng = rand::thread_rng();
     let mut out: [u8; DS] = [0; DS];
     for t in tv {
