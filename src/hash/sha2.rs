@@ -20,17 +20,23 @@ pub const SHA256_DIGEST_SIZE: usize = 32;
 
 pub const SHA384_DIGEST_SIZE: usize = 48;
 
+pub const SHA224_DIGEST_SIZE: usize = 28;
+
 pub const SHA2_STATE_SIZE: usize = 8;
 
 trait SHA512Like {}
+trait SHA256Like {}
 
 #[derive(Debug)]
 pub struct SHA256;
 #[derive(Debug)]
+pub struct SHA224;
+#[derive(Debug)]
 pub struct SHA512;
 #[derive(Debug)]
 pub struct SHA384;
-
+impl SHA256Like for SHA256 {}
+impl SHA256Like for SHA224 {}
 impl SHA512Like for SHA512 {}
 impl SHA512Like for SHA384 {}
 
@@ -207,7 +213,12 @@ trait SHA2Algo<
     }
 }
 
-impl SHA2Algo<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, SHA256_SCHED_SIZE, u32> for SHA256 {
+impl<T> SHA2Algo<SHA256_BLOCKSIZE,
+                SHA256_DIGEST_SIZE,
+                SHA2_STATE_SIZE,
+                SHA256_SCHED_SIZE,
+                u32> for T where T: SHA256Like {
+
     fn prepare_schedule(W: &mut[u32; SHA256_SCHED_SIZE], t: usize, input: &[u8]) {
         W[t] = Self::u8toT(input[t * 4]) << 24;
         W[t] |= Self::u8toT(input[t * 4 + 1]) << 16;
@@ -238,9 +249,9 @@ impl SHA2Algo<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, SHA256_SCHE
 
 
 impl<T> SHA2Algo<SHA512_BLOCKSIZE,
-              SHA512_DIGEST_SIZE,
-              SHA2_STATE_SIZE,
-              SHA512_SCHED_SIZE, u64> for T where T: SHA512Like {
+                SHA512_DIGEST_SIZE,
+                SHA2_STATE_SIZE,
+                SHA512_SCHED_SIZE, u64> for T where T: SHA512Like {
 
     fn prepare_schedule(W: &mut[u64; SHA512_SCHED_SIZE], t: usize, input: &[u8]) {
 		W[t] =  Self::u8toT(input[t * 8]) << 56; 
@@ -275,9 +286,7 @@ impl<T> SHA2Algo<SHA512_BLOCKSIZE,
 }
 
 
-impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA256 
-    where SHA256: SHA2Algo<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, SHA256_SCHED_SIZE, u32> {
-
+impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA256 {
     fn Ttou8(x:u32) -> u8 {
         return x as u8;
     }
@@ -285,6 +294,7 @@ impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
     fn _transform(&self, state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K256);
     }
+
     fn _init(&self, ctx: &mut HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32>) {
         // clear ctx since it could be reused
         ctx.count = 0;
@@ -300,6 +310,33 @@ impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
         ctx.state[5] = 0x9b05688c;
         ctx.state[6] = 0x1f83d9ab;
         ctx.state[7] = 0x5be0cd19;
+    }
+}
+
+impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA224 {
+    fn Ttou8(x:u32) -> u8 {
+        return x as u8;
+    }
+
+    fn _transform(&self, state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
+        Self::sha2_round(state, input, &K256);
+    }
+
+    fn _init(&self, ctx: &mut HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32>) {
+        // clear ctx since it could be reused
+        ctx.count = 0;
+        ctx.rem_pos = 0;
+        ctx.buffer.fill(0);
+
+        //set initial state
+	    ctx.state[0] = 0xc1059ed8;
+	    ctx.state[1] = 0x367cd507; 
+	    ctx.state[2] = 0x3070dd17;
+	    ctx.state[3] = 0xf70e5939;
+	    ctx.state[4] = 0xffc00b31;
+	    ctx.state[5] = 0x68581511;
+	    ctx.state[6] = 0x64f98fa7;
+	    ctx.state[7] = 0xbefa4fa4;
     }
 }
 

@@ -9,6 +9,13 @@ fn streaming_api_256() {
 }
 
 #[test]
+fn streaming_api_224() {
+    let tv = common::parse_hash_vectors(&["./tests/tv/SHA224LongMsg.rsp",
+                                        "./tests/tv/SHA224ShortMsg.rsp"]);
+    common::streaming_api_test::<28>(tv, &mut SHA::new_sha224());
+}
+
+#[test]
 fn streaming_api_512() {
     let tv = common::parse_hash_vectors(&["./tests/tv/SHA512LongMsg.rsp",
                                         "./tests/tv/SHA512ShortMsg.rsp"]);
