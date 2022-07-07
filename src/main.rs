@@ -5,7 +5,7 @@ fn main() {
     let mut input: [u8; 3] = [0x61, 0x62, 0x63];
     let mut secinput: [u8; 70] = [1; 70];
     let mut s1 = SHA::new_sha1();
-    let mut s2 = SHA::new_sha2();
+    let mut s2 = SHA::new_sha256();
     let mut s5 = SHA::new_sha512();
     let mut sha1 = Box::new(SHA::new_sha1());
     let mut out: [u8; 64] = [0; 64];

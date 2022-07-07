@@ -244,7 +244,7 @@ impl SHA {
             ops: SHA1,
         };
     }
-    pub fn new_sha2() -> Self {
+    pub fn new_sha256() -> Self {
         return SHA::SHA256Ctx {
             data: HashDataCtx {
                 count: 0,
