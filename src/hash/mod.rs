@@ -4,6 +4,7 @@ mod sha1;
 use crate::utils::UsizeCast;
 use crate::hash::sha2::SHA256;
 use crate::hash::sha2::SHA512;
+use crate::hash::sha2::SHA384;
 use crate::hash::sha2::SHA2_STATE_SIZE;
 use crate::hash::sha2::SHA256_BLOCKSIZE;
 use crate::hash::sha2::SHA512_BLOCKSIZE;
@@ -220,6 +221,10 @@ pub enum SHA {
         data: HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>,
         ops: SHA512,
     },
+    SHA384Ctx {
+        data: HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>,
+        ops: SHA384,
+    }
 }
 
 impl SHA {
@@ -245,6 +250,18 @@ impl SHA {
             ops: SHA256,
         };
     }
+    
+    pub fn new_sha384() -> Self {
+        return SHA::SHA384Ctx {
+            data: HashDataCtx {
+                count: 0,
+                buffer: [0; SHA512_BLOCKSIZE],
+                rem_pos: 0,
+                state: [0; SHA2_STATE_SIZE],
+            },
+            ops: SHA384,
+        };
+    }
 
     pub fn new_sha512() -> Self {
         return SHA::SHA512Ctx {
@@ -262,6 +279,7 @@ impl SHA {
         match *self {
             SHA::SHA1Ctx{ref mut data, ref ops} => ops._init(data),
             SHA::SHA256Ctx{ref mut data, ref ops} => ops._init(data),
+            SHA::SHA384Ctx{ref mut data, ref ops} => ops._init(data),
             SHA::SHA512Ctx{ref mut data, ref ops} => ops._init(data)
         }
     }
@@ -270,6 +288,7 @@ impl SHA {
         match *self {
             SHA::SHA1Ctx{ref mut data, ref ops} => ops._update(data, input),
             SHA::SHA256Ctx{ref mut data, ref ops} => ops._update(data, input),
+            SHA::SHA384Ctx{ref mut data, ref ops} => ops._update(data, input),
             SHA::SHA512Ctx{ref mut data, ref ops} => ops._update(data, input)
         }
     }
@@ -278,6 +297,7 @@ impl SHA {
         match *self {
             SHA::SHA1Ctx{ref mut data, ref ops} => ops._finish(data, output),
             SHA::SHA256Ctx{ref mut data, ref ops} => ops._finish(data, output),
+            SHA::SHA384Ctx{ref mut data, ref ops} => ops._finish(data, output),
             SHA::SHA512Ctx{ref mut data, ref ops} => ops._finish(data, output)
         }
     }

@@ -13,15 +13,26 @@ use crate::utils::UsizeCast;
 pub const SHA512_BLOCKSIZE: usize = 128;
 pub const SHA512_DIGEST_SIZE: usize = 64;
 pub const SHA512_SCHED_SIZE: usize = 80;
+
 pub const SHA256_BLOCKSIZE: usize = 64;
 pub const SHA256_SCHED_SIZE: usize = 64;
 pub const SHA256_DIGEST_SIZE: usize = 32;
+
+pub const SHA384_DIGEST_SIZE: usize = 48;
+
 pub const SHA2_STATE_SIZE: usize = 8;
+
+trait SHA512Like {}
 
 #[derive(Debug)]
 pub struct SHA256;
 #[derive(Debug)]
 pub struct SHA512;
+#[derive(Debug)]
+pub struct SHA384;
+
+impl SHA512Like for SHA512 {}
+impl SHA512Like for SHA384 {}
 
 static K256: [u32; 64] = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -225,7 +236,12 @@ impl SHA2Algo<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, SHA256_SCHE
     }
 }
 
-impl SHA2Algo<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, SHA512_SCHED_SIZE, u64> for SHA512 {
+
+impl<T> SHA2Algo<SHA512_BLOCKSIZE,
+              SHA512_DIGEST_SIZE,
+              SHA2_STATE_SIZE,
+              SHA512_SCHED_SIZE, u64> for T where T: SHA512Like {
+
     fn prepare_schedule(W: &mut[u64; SHA512_SCHED_SIZE], t: usize, input: &[u8]) {
 		W[t] =  Self::u8toT(input[t * 8]) << 56; 
 		W[t] |= Self::u8toT(input[t * 8 + 1]) << 48; 
@@ -312,5 +328,32 @@ impl Operations<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for 
         ctx.state[6] = 0x1f83d9abfb41bd6b;
         ctx.state[7] = 0x5be0cd19137e2179;
 
+    }
+}
+
+impl Operations<SHA512_BLOCKSIZE, SHA384_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA384 {
+    fn Ttou8(x:u64) -> u8 {
+        return x as u8;
+    }
+
+    fn _transform(&self, state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
+        Self::sha2_round(state, input, &K512);
+    }
+
+    fn _init(&self, ctx: &mut HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>) {
+        // clear ctx since it could be reused
+        ctx.count = 0;
+        ctx.rem_pos = 0;
+        ctx.buffer.fill(0);
+
+        //set initial state
+	    ctx.state[0] = 0xcbbb9d5dc1059ed8;
+	    ctx.state[1] = 0x629a292a367cd507;
+	    ctx.state[2] = 0x9159015a3070dd17;
+	    ctx.state[3] = 0x152fecd8f70e5939;
+	    ctx.state[4] = 0x67332667ffc00b31;
+	    ctx.state[5] = 0x8eb44a8768581511;
+	    ctx.state[6] = 0xdb0c2e0d64f98fa7;
+	    ctx.state[7] = 0x47b5481dbefa4fa4;
     }
 }
