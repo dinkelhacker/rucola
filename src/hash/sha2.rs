@@ -28,17 +28,18 @@ trait SHA512Like {}
 trait SHA256Like {}
 
 #[derive(Debug)]
-pub struct SHA256;
+pub struct SHA256Ctx { pub data: HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32> }
 #[derive(Debug)]
-pub struct SHA224;
+pub struct SHA224Ctx { pub data: HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32> }
 #[derive(Debug)]
-pub struct SHA512;
+pub struct SHA512Ctx { pub data: HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64> }
 #[derive(Debug)]
-pub struct SHA384;
-impl SHA256Like for SHA256 {}
-impl SHA256Like for SHA224 {}
-impl SHA512Like for SHA512 {}
-impl SHA512Like for SHA384 {}
+pub struct SHA384Ctx { pub data: HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64> }
+
+impl SHA256Like for SHA256Ctx {}
+impl SHA256Like for SHA224Ctx {}
+impl SHA512Like for SHA512Ctx {}
+impl SHA512Like for SHA384Ctx {}
 
 static K256: [u32; 64] = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -118,8 +119,6 @@ trait SHA2Algo<
     fn sha2_ssig0(x: T) -> T;
     
     fn sha2_ssig1(x: T) -> T;
-
-    fn u8toT(x:u8)-> T;
 
     fn prepare_schedule(W: &mut[T; SCHED_SIZE], t: usize, input: &[u8]) -> ();
 
@@ -220,14 +219,10 @@ impl<T> SHA2Algo<SHA256_BLOCKSIZE,
                 u32> for T where T: SHA256Like {
 
     fn prepare_schedule(W: &mut[u32; SHA256_SCHED_SIZE], t: usize, input: &[u8]) {
-        W[t] = Self::u8toT(input[t * 4]) << 24;
-        W[t] |= Self::u8toT(input[t * 4 + 1]) << 16;
-        W[t] |= Self::u8toT(input[t * 4 + 2]) << 8;
-        W[t] |= Self::u8toT(input[t * 4 + 3]);
-    }
-
-    fn u8toT(x:u8) -> u32 {
-        return x.into();
+        W[t] = (input[t * 4] as u32) << 24;
+        W[t] |= (input[t * 4 + 1] as u32) << 16;
+        W[t] |= (input[t * 4 + 2] as u32) << 8;
+        W[t] |= (input[t * 4 + 3] as u32);
     }
 
     fn sha2_bsig0(x: u32) -> u32 {
@@ -254,18 +249,14 @@ impl<T> SHA2Algo<SHA512_BLOCKSIZE,
                 SHA512_SCHED_SIZE, u64> for T where T: SHA512Like {
 
     fn prepare_schedule(W: &mut[u64; SHA512_SCHED_SIZE], t: usize, input: &[u8]) {
-		W[t] =  Self::u8toT(input[t * 8]) << 56; 
-		W[t] |= Self::u8toT(input[t * 8 + 1]) << 48; 
-		W[t] |= Self::u8toT(input[t * 8 + 2]) << 40; 
-		W[t] |= Self::u8toT(input[t * 8 + 3]) << 32; 
-		W[t] |= Self::u8toT(input[t * 8 + 4]) << 24; 
-		W[t] |= Self::u8toT(input[t * 8 + 5]) << 16; 
-		W[t] |= Self::u8toT(input[t * 8 + 6]) << 8; 
-		W[t] |= Self::u8toT(input[t * 8 + 7]);
-    }
-
-    fn u8toT(x:u8) -> u64 {
-        return x.into();
+		W[t] =  (input[t * 8] as u64) << 56; 
+		W[t] |= (input[t * 8 + 1] as u64) << 48; 
+		W[t] |= (input[t * 8 + 2] as u64) << 40; 
+		W[t] |= (input[t * 8 + 3] as u64) << 32; 
+		W[t] |= (input[t * 8 + 4] as u64) << 24; 
+		W[t] |= (input[t * 8 + 5] as u64) << 16; 
+		W[t] |= (input[t * 8 + 6] as u64) << 8; 
+		W[t] |= (input[t * 8 + 7] as u64);
     }
 
     fn sha2_bsig0(x: u64) -> u64 {
@@ -286,16 +277,16 @@ impl<T> SHA2Algo<SHA512_BLOCKSIZE,
 }
 
 
-impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA256 {
+impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA256Ctx {
     fn Ttou8(x:u32) -> u8 {
         return x as u8;
     }
 
-    fn _transform(&self, state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
+    fn _transform(state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K256);
     }
 
-    fn _init(&self, ctx: &mut HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32>) {
+    fn _init(ctx: &mut HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32>) {
         // clear ctx since it could be reused
         ctx.count = 0;
         ctx.rem_pos = 0;
@@ -313,16 +304,16 @@ impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
     }
 }
 
-impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA224 {
+impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA224Ctx {
     fn Ttou8(x:u32) -> u8 {
         return x as u8;
     }
 
-    fn _transform(&self, state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
+    fn _transform(state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K256);
     }
 
-    fn _init(&self, ctx: &mut HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32>) {
+    fn _init(ctx: &mut HashDataCtx<SHA256_BLOCKSIZE, SHA2_STATE_SIZE, u32>) {
         // clear ctx since it could be reused
         ctx.count = 0;
         ctx.rem_pos = 0;
@@ -341,15 +332,15 @@ impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
 }
 
 
-impl Operations<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA512 {
+impl Operations<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA512Ctx {
     fn Ttou8(x:u64) -> u8 {
         return x as u8;
     }
 
-    fn _transform(&self, state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
+    fn _transform(state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K512);
     }
-    fn _init(&self, ctx: &mut HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>) {
+    fn _init(ctx: &mut HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>) {
         // clear ctx since it could be reused
         ctx.count = 0;
         ctx.rem_pos = 0;
@@ -368,16 +359,16 @@ impl Operations<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for 
     }
 }
 
-impl Operations<SHA512_BLOCKSIZE, SHA384_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA384 {
+impl Operations<SHA512_BLOCKSIZE, SHA384_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA384Ctx {
     fn Ttou8(x:u64) -> u8 {
         return x as u8;
     }
 
-    fn _transform(&self, state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
+    fn _transform(state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K512);
     }
 
-    fn _init(&self, ctx: &mut HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>) {
+    fn _init(ctx: &mut HashDataCtx<SHA512_BLOCKSIZE, SHA2_STATE_SIZE, u64>) {
         // clear ctx since it could be reused
         ctx.count = 0;
         ctx.rem_pos = 0;

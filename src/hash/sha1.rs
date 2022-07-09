@@ -7,15 +7,15 @@ pub const SHA1_BLOCKSIZE: usize = 64;
 pub const SHA1_STATE_SIZE: usize = 5;
 
 #[derive(Debug)]
-pub struct SHA1;
+pub struct SHA1Ctx { pub data: HashDataCtx<SHA1_BLOCKSIZE, SHA1_STATE_SIZE, u32> }
 
-impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1 {
+impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1Ctx {
 
     fn Ttou8(x:u32) -> u8 {
         return x as u8;
     }
 
-    fn _transform(&self, state: &mut [u32; SHA1_STATE_SIZE], mut input: &[u8]) {
+    fn _transform(state: &mut [u32; SHA1_STATE_SIZE], mut input: &[u8]) {
 
 	    let mut a: u32;
         let mut b: u32;
@@ -79,7 +79,7 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
             input = &input[SHA1_BLOCKSIZE..];
 	    }
     }
-    fn _init(&self, ctx: &mut HashDataCtx<SHA1_BLOCKSIZE, SHA1_STATE_SIZE, u32>) {
+    fn _init(ctx: &mut HashDataCtx<SHA1_BLOCKSIZE, SHA1_STATE_SIZE, u32>) {
         // clear ctx since it could be reused
         ctx.count = 0;
         ctx.rem_pos = 0;
