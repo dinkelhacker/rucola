@@ -135,7 +135,7 @@ trait SHA2Algo<
         let mut T2: T;
         let mut t: T;
 
-        let mut mlen: i64 = (input.len() - BLOCKSIZE) as i64;
+        let mut mlen: i64 = input.len() as i64 - BLOCKSIZE as i64;
         while mlen >= 0 {
             mlen -= BLOCKSIZE as i64;
 

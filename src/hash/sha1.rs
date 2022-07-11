@@ -20,7 +20,7 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
         let mut T: u32;
 
 	    let mut W: [u32;80] = [0;80];
-        let mut mlen: i64 = (input.len() - SHA1_BLOCKSIZE) as i64;
+        let mut mlen: i64 = input.len() as i64 - SHA1_BLOCKSIZE as i64;
          
 	    while mlen  >= 0 {
             mlen -= SHA1_BLOCKSIZE as i64;
