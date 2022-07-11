@@ -7,7 +7,6 @@ use core::ops::BitXor;
 use core::ops::Not;
 use num::traits::WrappingAdd;
 use core::ops::BitOrAssign;
-use crate::utils::UsizeCast;
 
 
 pub const SHA512_BLOCKSIZE: usize = 128;
@@ -136,9 +135,9 @@ trait SHA2Algo<
         let mut T2: T;
         let mut t: T;
 
-        let mut mlen: i64 = input.len().i64() - BLOCKSIZE.i64();
+        let mut mlen: i64 = (input.len() - BLOCKSIZE) as i64;
         while mlen >= 0 {
-            mlen -= BLOCKSIZE.i64();
+            mlen -= BLOCKSIZE as i64;
 
             // Initialized the woking variables.
             a = state[0];
@@ -152,10 +151,6 @@ trait SHA2Algo<
 
             //  Prepare the message schedule W and compute intermmediate values.
             for t in 0..16 {
-                //W[t] = Self::u8toT(input[t * 4]) << 24;
-                //W[t] |= Self::u8toT(input[t * 4 + 1]) << 16;
-                //W[t] |= Self::u8toT(input[t * 4 + 2]) << 8;
-                //W[t] |= Self::u8toT(input[t * 4 + 3]);
                 Self::prepare_schedule(&mut W, t, input);
 
                 T1 = h
@@ -278,9 +273,6 @@ impl<T> SHA2Algo<SHA512_BLOCKSIZE,
 
 
 impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA256Ctx {
-    fn Ttou8(x:u32) -> u8 {
-        return x as u8;
-    }
 
     fn _transform(state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K256);
@@ -305,9 +297,6 @@ impl Operations<SHA256_BLOCKSIZE, SHA256_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
 }
 
 impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for SHA224Ctx {
-    fn Ttou8(x:u32) -> u8 {
-        return x as u8;
-    }
 
     fn _transform(state: &mut [u32; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K256);
@@ -333,9 +322,6 @@ impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
 
 
 impl Operations<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA512Ctx {
-    fn Ttou8(x:u64) -> u8 {
-        return x as u8;
-    }
 
     fn _transform(state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K512);
@@ -360,9 +346,6 @@ impl Operations<SHA512_BLOCKSIZE, SHA512_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for 
 }
 
 impl Operations<SHA512_BLOCKSIZE, SHA384_DIGEST_SIZE, SHA2_STATE_SIZE, u64> for SHA384Ctx {
-    fn Ttou8(x:u64) -> u8 {
-        return x as u8;
-    }
 
     fn _transform(state: &mut [u64; SHA2_STATE_SIZE], mut input: &[u8]) {
         Self::sha2_round(state, input, &K512);

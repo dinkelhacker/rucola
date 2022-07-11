@@ -1,6 +1,5 @@
 use crate::hash::Operations;
 use crate::hash::HashDataCtx;
-use crate::utils::UsizeCast;
 
 pub const SHA1_DIGEST_SIZE: usize = 20;
 pub const SHA1_BLOCKSIZE: usize = 64;
@@ -10,10 +9,6 @@ pub const SHA1_STATE_SIZE: usize = 5;
 pub struct SHA1Ctx { pub data: HashDataCtx<SHA1_BLOCKSIZE, SHA1_STATE_SIZE, u32> }
 
 impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1Ctx {
-
-    fn Ttou8(x:u32) -> u8 {
-        return x as u8;
-    }
 
     fn _transform(state: &mut [u32; SHA1_STATE_SIZE], mut input: &[u8]) {
 
@@ -25,10 +20,10 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
         let mut T: u32;
 
 	    let mut W: [u32;80] = [0;80];
-        let mut mlen: i64 = input.len().i64() - SHA1_BLOCKSIZE.i64();
+        let mut mlen: i64 = (input.len() - SHA1_BLOCKSIZE) as i64;
          
 	    while mlen  >= 0 {
-            mlen -= SHA1_BLOCKSIZE.i64();
+            mlen -= SHA1_BLOCKSIZE as i64;
 
 	    	/* Set initial state */
 	    	a = state[0];

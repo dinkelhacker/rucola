@@ -1,7 +1,7 @@
 mod sha2;
 mod sha1;
 
-use crate::utils::UsizeCast;
+use crate::utils::Cast;
 use crate::hash::sha2::SHA256Ctx;
 use crate::hash::sha2::SHA224Ctx;
 use crate::hash::sha2::SHA512Ctx;
@@ -40,18 +40,17 @@ pub struct HashDataCtx<const BLOCKSIZE: usize, const STATE_SIZE: usize, S> {
 }
 
 
+
 trait Operations<
     const BLOCKSIZE: usize,
     const DIGEST_SIZE: usize,
     const STATE_SIZE: usize,
     T: PrimInt + BitAnd<Output=T> + Not<Output=T> + BitXor<Output=T> +
-        Zero + WrappingAdd + Copy + BitOrAssign + From<u8>> {
+        Zero + WrappingAdd + Copy + BitOrAssign + Cast<u8>> {
 
     fn _transform(state: &mut [T; STATE_SIZE], input: &[u8]);
     
     fn _init(ctx: &mut HashDataCtx<BLOCKSIZE, STATE_SIZE, T>);
-
-    fn Ttou8(x:T) -> u8;
 
     fn _finish(
         ctx: &mut HashDataCtx<BLOCKSIZE, STATE_SIZE, T>,
@@ -79,7 +78,9 @@ trait Operations<
         /* Last step. */
         let mut j = 0;
         for i in 0..digest_size {
-            output[i] = Self::Ttou8(ctx.state[j / size_of::<T>()] >> (((size_of::<T>() - 1) * 8) - (i % size_of::<T>() * 8))) & 0xFF;
+            // Copy result from state array to output buffer.
+            // T is a "wider" type than u8, so we have to shift and mask to get the proper result.
+            output[i] = (ctx.state[j / size_of::<T>()] >> (((size_of::<T>() - 1) * 8) - (i % size_of::<T>() * 8))).cast() & 0xFF;
             j += 1;
         }
     }
@@ -202,7 +203,6 @@ trait Operations<
         }
     }
 }
-
 
 
 #[derive(Debug)]

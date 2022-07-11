@@ -1,17 +1,15 @@
-pub trait UsizeCast {
-    fn u32(self) -> u32;
-    fn u64(self) -> u64;
-    fn i64(self) -> i64;
+pub trait Cast<T> {
+    fn cast(self) -> T;
 }
 
-impl UsizeCast for usize {
-    fn u32(self) -> u32 {
-        return self as u32;
+impl Cast<u8> for u32 {
+    fn cast(self) -> u8 {
+        return self as u8;
     }
-    fn u64(self) -> u64 {
-        return self as u64;
-    }
-    fn i64(self) -> i64 {
-        return self as i64;
+}
+
+impl Cast<u8> for u64 {
+    fn cast(self) -> u8 {
+        return self as u8;
     }
 }
