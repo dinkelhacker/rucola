@@ -21,7 +21,7 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
 
 	    let mut W: [u32;80] = [0;80];
         let mut mlen: i64 = input.len() as i64 - SHA1_BLOCKSIZE as i64;
-         
+
 	    while mlen  >= 0 {
             mlen -= SHA1_BLOCKSIZE as i64;
 
@@ -34,10 +34,10 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
 
 	    	/* Compute schedule and intermediate values. */
 	    	for t in 0..16 {
-	    		W[t] =  u32::from(input[t * 4]) << 24; 
-	    		W[t] |= u32::from(input[t * 4 + 1]) << 16; 
-	    		W[t] |= u32::from(input[t * 4 + 2]) << 8; 
-	    		W[t] |= u32::from(input[t * 4 + 3]); 
+	    		W[t] =  u32::from(input[t * 4]) << 24;
+	    		W[t] |= u32::from(input[t * 4 + 1]) << 16;
+	    		W[t] |= u32::from(input[t * 4 + 2]) << 8;
+	    		W[t] |= u32::from(input[t * 4 + 3]);
 
 	    		T = (a.rotate_left(5).wrapping_add(sha1f(b, c, d, t)))
                     .wrapping_add(e)
@@ -49,7 +49,7 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
 	    		b = a;
 	    		a = T;
 	    	}
-	    	
+
 	    	for t in 16..80 {
 	    		W[t] = (W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16]).rotate_left(1);
 
@@ -79,7 +79,7 @@ impl Operations<SHA1_BLOCKSIZE, SHA1_DIGEST_SIZE, SHA1_STATE_SIZE, u32> for SHA1
         ctx.count = 0;
         ctx.rem_pos = 0;
         ctx.buffer.fill(0);
-        
+
         // set initial state
 	    ctx.state[0] = 0x67452301;
 	    ctx.state[1] = 0xEFCDAB89;
@@ -93,7 +93,7 @@ fn sha1f(x: u32, y: u32, z: u32, t: usize) -> u32 {
         let mut res: u32 = 0;
 
         if 19 >= t{
-            res = ((x & y) | ((!x) & z));
+            res = (x & y) | ((!x) & z);
         } else if 20 <= t && 39 >= t {
             res = x ^ y ^ z;
         } else if 40 <= t && 59 >= t {

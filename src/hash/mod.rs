@@ -20,17 +20,9 @@ use core::ops::BitAnd;
 use core::ops::BitXor;
 use core::ops::BitOrAssign;
 use core::ops::Not;
-use core::convert::From;
 use core::mem::size_of;
+use crate::common::{Success, Error};
 
-enum Error {
-    Err,
-}
-
-enum Success {
-    OK,
-    Again,
-}
 
 #[derive(Debug)]
 pub struct HashDataCtx<const BLOCKSIZE: usize, const STATE_SIZE: usize, S> {
@@ -50,22 +42,20 @@ trait Operations<
         Zero + WrappingAdd + Copy + BitOrAssign + Cast<u8>> {
 
     fn _transform(state: &mut [T; STATE_SIZE], input: &[u8]);
-    
+
     fn _init(ctx: &mut HashDataCtx<BLOCKSIZE, STATE_SIZE, T>);
 
     fn _finish(
         ctx: &mut HashDataCtx<BLOCKSIZE, STATE_SIZE, T>,
         output: &mut [u8],
-    ) {
+    ) -> Result<Success, Error> {
         /* Apply padding to last block and proccess it. */
-        match Self::_padding(&mut ctx.buffer, ctx.count, true) {
-            Ok(Success::Again) => {
+        if let Success::Again = Self::_padding(&mut ctx.buffer, ctx.count, true)? {
                 Self::_transform(&mut ctx.state, &ctx.buffer);
                 ctx.buffer.fill(0);
                 Self::_padding(&mut ctx.buffer, ctx.count, false);
-            }
-            _ => (),
         }
+
         Self::_transform(&mut ctx.state, &ctx.buffer);
 
         /* Truncate output if needed */
@@ -84,14 +74,16 @@ trait Operations<
             output[i] = (ctx.state[j / size_of::<T>()] >> (((size_of::<T>() - 1) * 8) - (i % size_of::<T>() * 8))).cast() & 0xFF;
             j += 1;
         }
+
+        return Ok(Success::OK);
     }
 
     fn _process(
         ctx: &mut HashDataCtx<BLOCKSIZE, STATE_SIZE, T>,
         mut input: &[u8],
-    ) -> Result<(), Error> {
+    ) -> Result<Success, Error> {
         if input.len() == 0 {
-            return Ok(());
+            return Ok(Success::OK);
         }
 
         let mut insize = input.len();
@@ -113,7 +105,7 @@ trait Operations<
         } else if (ctx.rem_pos + insize) < BLOCKSIZE {
             ctx.buffer[ctx.rem_pos..ctx.rem_pos + insize].copy_from_slice(&input);
             ctx.rem_pos += insize;
-            return Ok(());
+            return Ok(Success::OK);
         }
 
         let nblocks = insize / BLOCKSIZE;
@@ -128,7 +120,8 @@ trait Operations<
                 .copy_from_slice(&input[nblocks * BLOCKSIZE..]);
         }
 
-        return Ok(());
+        return Ok(Success::OK);
+
     }
 
     fn _padding(msg: &mut [u8], msgsize: u64, is_fst_call: bool) -> Result<Success, Error> {
@@ -162,7 +155,7 @@ trait Operations<
                 /* Zeros.....*/
                 msg[i..BLOCKSIZE - 8].fill(0);
 
-                i += (BLOCKSIZE - 8 - i);
+                i += BLOCKSIZE - 8 - i;
 
                 msg[i] = (lbits >> 56) as u8 & 0xFF;
                 msg[i + 1] = (lbits >> 48) as u8 & 0xFF;
@@ -247,7 +240,7 @@ impl SHA {
             }
         });
     }
-    
+
     pub fn new_sha384() -> Self {
         return SHA::SHA384(SHA384Ctx {
             data: HashDataCtx {
@@ -275,37 +268,43 @@ impl SHA {
 impl StreamingAPI for SHA {}
 
 impl DefaultInit for SHA {
-    fn init(&mut self) {
+    fn init(&mut self) -> Result<Success, Error>{
         match &mut *self {
-            SHA::SHA1(ctx) => SHA1Ctx::_init(&mut ctx.data),
+            SHA::SHA1(ctx)   => SHA1Ctx::_init(&mut ctx.data),
             SHA::SHA256(ctx) => SHA256Ctx::_init(&mut ctx.data),
             SHA::SHA224(ctx) => SHA224Ctx::_init(&mut ctx.data),
             SHA::SHA384(ctx) => SHA384Ctx::_init(&mut ctx.data),
             SHA::SHA512(ctx) => SHA512Ctx::_init(&mut ctx.data)
         }
+
+        return Ok(Success::OK);
     }
 }
 
 impl SingleInputUpdate for SHA {
-    fn update(&mut self, input: &[u8]) {
-        match &mut *self {
-            SHA::SHA1(ctx) => { SHA1Ctx::_process(&mut ctx.data, input); }
-            SHA::SHA256(ctx) => { SHA256Ctx::_process(&mut ctx.data, input); },
-            SHA::SHA224(ctx) => { SHA224Ctx::_process(&mut ctx.data, input); },
-            SHA::SHA384(ctx) => { SHA384Ctx::_process(&mut ctx.data, input); },
-            SHA::SHA512(ctx) => { SHA512Ctx::_process(&mut ctx.data, input); }
-        }
+    fn update(&mut self, input: &[u8]) -> Result<Success, Error> {
+        let ret = match &mut *self {
+            SHA::SHA1(ctx)   => SHA1Ctx::_process(&mut ctx.data, input),
+            SHA::SHA256(ctx) => SHA256Ctx::_process(&mut ctx.data, input),
+            SHA::SHA224(ctx) => SHA224Ctx::_process(&mut ctx.data, input),
+            SHA::SHA384(ctx) => SHA384Ctx::_process(&mut ctx.data, input),
+            SHA::SHA512(ctx) => SHA512Ctx::_process(&mut ctx.data, input)
+        };
+
+        return ret;
     }
 }
 
 impl SingleOutputFinish for SHA {
-    fn finish(&mut self, output: &mut [u8]) {
-        match &mut *self {
-            SHA::SHA1(ctx) => { SHA1Ctx::_finish(&mut ctx.data, output); },
-            SHA::SHA256(ctx) => { SHA256Ctx::_finish(&mut ctx.data, output); },
-            SHA::SHA224(ctx) => { SHA224Ctx::_finish(&mut ctx.data, output); },
-            SHA::SHA384(ctx) => { SHA384Ctx::_finish(&mut ctx.data, output); },
-            SHA::SHA512(ctx) => { SHA512Ctx::_finish(&mut ctx.data, output); }
-        }
+    fn finish(&mut self, output: &mut [u8]) -> Result<Success, Error> {
+        let ret = match &mut *self {
+            SHA::SHA1(ctx)   => SHA1Ctx::_finish(&mut ctx.data, output),
+            SHA::SHA256(ctx) => SHA256Ctx::_finish(&mut ctx.data, output),
+            SHA::SHA224(ctx) => SHA224Ctx::_finish(&mut ctx.data, output),
+            SHA::SHA384(ctx) => SHA384Ctx::_finish(&mut ctx.data, output),
+            SHA::SHA512(ctx) => SHA512Ctx::_finish(&mut ctx.data, output)
+        };
+
+        return ret;
     }
 }

@@ -100,23 +100,23 @@ trait SHA2Algo<
     const DIGEST_SIZE: usize,
     const STATE_SIZE: usize,
     const SCHED_SIZE: usize,
-    T: PrimInt + BitAnd<Output=T> + Not<Output=T> + BitXor<Output=T> + Zero 
+    T: PrimInt + BitAnd<Output=T> + Not<Output=T> + BitXor<Output=T> + Zero
         + WrappingAdd + Copy + BitOrAssign + From<u8>> {
 
     fn sha2_ch(x: T, y: T, z: T) -> T{
         return (x & y) ^ ((!x) & z);
     }
-    
+
     fn sha2_maj(x: T, y: T, z: T) -> T {
         return (x & y) ^ (x & z) ^ (y & z);
     }
 
-    fn sha2_bsig0(x: T) -> T; 
-    
+    fn sha2_bsig0(x: T) -> T;
+
     fn sha2_bsig1(x: T) -> T;
-    
+
     fn sha2_ssig0(x: T) -> T;
-    
+
     fn sha2_ssig1(x: T) -> T;
 
     fn prepare_schedule(W: &mut[T; SCHED_SIZE], t: usize, input: &[u8]) -> ();
@@ -133,7 +133,6 @@ trait SHA2Algo<
         let mut h: T;
         let mut T1: T;
         let mut T2: T;
-        let mut t: T;
 
         let mut mlen: i64 = input.len() as i64 - BLOCKSIZE as i64;
         while mlen >= 0 {
@@ -217,21 +216,21 @@ impl<T> SHA2Algo<SHA256_BLOCKSIZE,
         W[t] = (input[t * 4] as u32) << 24;
         W[t] |= (input[t * 4 + 1] as u32) << 16;
         W[t] |= (input[t * 4 + 2] as u32) << 8;
-        W[t] |= (input[t * 4 + 3] as u32);
+        W[t] |= input[t * 4 + 3] as u32;
     }
 
     fn sha2_bsig0(x: u32) -> u32 {
         return x.rotate_right(2) ^ x.rotate_right(13) ^ x.rotate_right(22);
     }
-    
+
     fn sha2_bsig1(x: u32) -> u32 {
         return x.rotate_right(6) ^ x.rotate_right(11) ^ x.rotate_right(25);
     }
-    
+
     fn sha2_ssig0(x: u32) -> u32 {
         return x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3);
     }
-    
+
     fn sha2_ssig1(x: u32) -> u32 {
         return x.rotate_right(17) ^ x.rotate_right(19) ^ (x >> 10);
     }
@@ -244,28 +243,28 @@ impl<T> SHA2Algo<SHA512_BLOCKSIZE,
                 SHA512_SCHED_SIZE, u64> for T where T: SHA512Like {
 
     fn prepare_schedule(W: &mut[u64; SHA512_SCHED_SIZE], t: usize, input: &[u8]) {
-		W[t] =  (input[t * 8] as u64) << 56; 
-		W[t] |= (input[t * 8 + 1] as u64) << 48; 
-		W[t] |= (input[t * 8 + 2] as u64) << 40; 
-		W[t] |= (input[t * 8 + 3] as u64) << 32; 
-		W[t] |= (input[t * 8 + 4] as u64) << 24; 
-		W[t] |= (input[t * 8 + 5] as u64) << 16; 
-		W[t] |= (input[t * 8 + 6] as u64) << 8; 
-		W[t] |= (input[t * 8 + 7] as u64);
+		W[t] =  (input[t * 8] as u64) << 56;
+		W[t] |= (input[t * 8 + 1] as u64) << 48;
+		W[t] |= (input[t * 8 + 2] as u64) << 40;
+		W[t] |= (input[t * 8 + 3] as u64) << 32;
+		W[t] |= (input[t * 8 + 4] as u64) << 24;
+		W[t] |= (input[t * 8 + 5] as u64) << 16;
+		W[t] |= (input[t * 8 + 6] as u64) << 8;
+		W[t] |= input[t * 8 + 7] as u64;
     }
 
     fn sha2_bsig0(x: u64) -> u64 {
         return x.rotate_right(28) ^ x.rotate_right(34) ^ x.rotate_right(39);
     }
-    
+
     fn sha2_bsig1(x: u64) -> u64 {
         return x.rotate_right(14) ^ x.rotate_right(18) ^ x.rotate_right(41);
     }
-    
+
     fn sha2_ssig0(x: u64) -> u64 {
         return x.rotate_right(1) ^ x.rotate_right(8) ^ (x >> 7);
     }
-    
+
     fn sha2_ssig1(x: u64) -> u64 {
         return x.rotate_right(19) ^ x.rotate_right(61) ^ (x >> 6);
     }
@@ -310,7 +309,7 @@ impl Operations<SHA256_BLOCKSIZE, SHA224_DIGEST_SIZE, SHA2_STATE_SIZE, u32> for 
 
         //set initial state
 	    ctx.state[0] = 0xc1059ed8;
-	    ctx.state[1] = 0x367cd507; 
+	    ctx.state[1] = 0x367cd507;
 	    ctx.state[2] = 0x3070dd17;
 	    ctx.state[3] = 0xf70e5939;
 	    ctx.state[4] = 0xffc00b31;

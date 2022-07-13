@@ -5,6 +5,7 @@ use regex::Regex;
 use hex::FromHex;
 use rand::Rng;
 use rucola::hash::SHA;
+use rucola::common::{Success, Error};
 use rucola::common::api::{StreamingAPI, DefaultInit, SingleInputUpdate, SingleOutputFinish};
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
@@ -21,9 +22,9 @@ pub fn parse_hash_vectors(files: &[&'static str]) -> Vec<(Vec<u8>, Vec<u8>)>{
         if let Ok(lines) = read_lines(file) {
             let mut m = Vec::<u8>::new();
             let mut state = 0;
-        
+
             for line in lines {
-                if let(Ok(l)) = line {
+                if let Ok(l) = line {
                     match state {
                        0 => {
                            let cap = re_line.captures(&l);
@@ -31,7 +32,7 @@ pub fn parse_hash_vectors(files: &[&'static str]) -> Vec<(Vec<u8>, Vec<u8>)>{
                                m = hex::decode(v["msg"].to_string()).expect("Failed");
                                state = 1;
                            }
-                       }, 
+                       },
                        _ => {
                            let cap = re_digest.captures(&l);
                            if let Some(v) = cap {
@@ -55,18 +56,17 @@ pub fn streaming_api_test<const DS: usize, Prim>(tv: Vec<(Vec<u8>, Vec<u8>)>, s:
     let mut out: [u8; DS] = [0; DS];
     for t in tv {
         out.fill(0);
-        s.init();
+        assert_eq!(Ok(Success::OK), s.init());
         let mut n = 0;
         while n < t.0.len() {
             let mut r = rng.gen_range(0..t.0.len()+1);
             if r + n > t.0.len() {
                 r = t.0.len() - n;
             }
-
-            s.update(&t.0[n..n+r]);
+            assert_eq!(Ok(Success::OK), s.update(&t.0[n..n+r]));
             n += r;
         }
-        s.finish(&mut out);
+        assert_eq!(Ok(Success::OK), s.finish(&mut out));
         println!("expected: {:x?}", t.1);
         assert_eq!(t.1, out);
     }
