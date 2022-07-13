@@ -5,6 +5,7 @@ use regex::Regex;
 use hex::FromHex;
 use rand::Rng;
 use rucola::hash::SHA;
+use rucola::common::api::{StreamingAPI, DefaultInit, SingleInputUpdate, SingleOutputFinish};
 
 fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where P: AsRef<Path>, {
@@ -48,7 +49,8 @@ pub fn parse_hash_vectors(files: &[&'static str]) -> Vec<(Vec<u8>, Vec<u8>)>{
     return vec;
 }
 
-pub fn streaming_api_test<const DS: usize>(tv: Vec<(Vec<u8>, Vec<u8>)>, s: &mut SHA) {
+pub fn streaming_api_test<const DS: usize, Prim>(tv: Vec<(Vec<u8>, Vec<u8>)>, s: &mut Prim)
+    where Prim: StreamingAPI {
     let mut rng = rand::thread_rng();
     let mut out: [u8; DS] = [0; DS];
     for t in tv {

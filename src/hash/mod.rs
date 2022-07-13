@@ -1,6 +1,7 @@
 mod sha2;
 mod sha1;
 
+use crate::common::api::{StreamingAPI, DefaultInit, SingleInputUpdate, SingleOutputFinish};
 use crate::utils::Cast;
 use crate::hash::sha2::SHA256Ctx;
 use crate::hash::sha2::SHA224Ctx;
@@ -268,8 +269,13 @@ impl SHA {
             }
         });
     }
+}
 
-    pub fn init(&mut self) {
+
+impl StreamingAPI for SHA {}
+
+impl DefaultInit for SHA {
+    fn init(&mut self) {
         match &mut *self {
             SHA::SHA1(ctx) => SHA1Ctx::_init(&mut ctx.data),
             SHA::SHA256(ctx) => SHA256Ctx::_init(&mut ctx.data),
@@ -278,8 +284,10 @@ impl SHA {
             SHA::SHA512(ctx) => SHA512Ctx::_init(&mut ctx.data)
         }
     }
+}
 
-    pub fn update(&mut self, input: &[u8]) {
+impl SingleInputUpdate for SHA {
+    fn update(&mut self, input: &[u8]) {
         match &mut *self {
             SHA::SHA1(ctx) => { SHA1Ctx::_process(&mut ctx.data, input); }
             SHA::SHA256(ctx) => { SHA256Ctx::_process(&mut ctx.data, input); },
@@ -288,8 +296,10 @@ impl SHA {
             SHA::SHA512(ctx) => { SHA512Ctx::_process(&mut ctx.data, input); }
         }
     }
+}
 
-    pub fn finish(&mut self, output: &mut [u8]) {
+impl SingleOutputFinish for SHA {
+    fn finish(&mut self, output: &mut [u8]) {
         match &mut *self {
             SHA::SHA1(ctx) => { SHA1Ctx::_finish(&mut ctx.data, output); },
             SHA::SHA256(ctx) => { SHA256Ctx::_finish(&mut ctx.data, output); },

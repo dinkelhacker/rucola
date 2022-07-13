@@ -1,5 +1,6 @@
 //#![no_std]
 use rucola::hash::SHA;
+use rucola::common::api::{StreamingAPI, DefaultInit, SingleInputUpdate, SingleOutputFinish};
 
 fn main() {
     let mut input: [u8; 3] = [0x61, 0x62, 0x63];
